@@ -180,6 +180,10 @@ def run_job():
     train_metrics = evaluate_model(best_model, X_train, y_train, "train")
     test_metrics = evaluate_model(best_model, X_test, y_test, "test")
 
+    # Add "type" field to match the test expectations
+    train_metrics["type"] = "metrics"
+    test_metrics["type"] = "metrics"
+
     output_path = "files/output/metrics.json"
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
@@ -191,10 +195,11 @@ def run_job():
     train_cm = compute_confusion_matrix(best_model, X_train, y_train, "train")
     test_cm = compute_confusion_matrix(best_model, X_test, y_test, "test")
 
-    # Load existing metrics from metrics.json
-    output_path = "files/output/metrics.json"
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    # Add "type" field to confusion matrices
+    train_cm["type"] = "cm_matrix"
+    test_cm["type"] = "cm_matrix"
 
+    # Load existing metrics from metrics.json
     if os.path.exists(output_path):
         with open(output_path, "r") as f:
             metrics_data = json.load(f)
@@ -205,18 +210,9 @@ def run_job():
     metrics_data.append(train_cm)
     metrics_data.append(test_cm)
 
-    _load_metrics()
-
-    print(f"Confusion matrices saved successfully at {output_path}")
-
-def _load_metrics():
-    assert os.path.exists("files/output/metrics.json")
-    
-    with open("files/output/metrics.json", "r", encoding="utf-8") as file:
-        metrics = json.load(file)  # Load entire JSON instead of line-by-line
-    
-    return metrics
-
+    # Save updated metrics
+    with open(output_path, "w") as f:
+        json.dump(metrics_data, f, indent=4)
 
 if __name__ == "__main__":
     run_job()
