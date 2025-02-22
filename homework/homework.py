@@ -118,6 +118,8 @@ def evaluate_model(model, X, y, dataset_name):
     y_pred = model.predict(X)
 
     metrics = {
+        
+        "type" : "metrics",
         "dataset": dataset_name,
         "precision": precision_score(y, y_pred, average="weighted"),
         "balanced_accuracy": balanced_accuracy_score(y, y_pred),
@@ -180,9 +182,7 @@ def run_job():
     train_metrics = evaluate_model(best_model, X_train, y_train, "train")
     test_metrics = evaluate_model(best_model, X_test, y_test, "test")
 
-    # Add "type" field to match the test expectations
-    train_metrics["type"] = "metrics"
-    test_metrics["type"] = "metrics"
+   
 
     output_path = "files/output/metrics.json"
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
