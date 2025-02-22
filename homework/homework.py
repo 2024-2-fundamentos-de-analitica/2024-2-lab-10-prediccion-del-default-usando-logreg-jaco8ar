@@ -66,7 +66,7 @@ def make_pipeline_logistic(categorical_features, numerical_features, k_best_feat
         steps=[
             ("preprocessor", preprocessor),  # Step 1: Preprocessing (One-Hot + Scaling)
             ("feature_selection", SelectKBest(score_func=f_classif, k=k_best_features)),  # Step 2: Feature Selection
-            ("classifier", LogisticRegression(random_state=42))  # Step 3: Logistic Regression Model
+            ("classifier", LogisticRegression(max_iter=500,random_state=42))  # Step 3: Logistic Regression Model
         ]
     )
 
@@ -205,12 +205,17 @@ def run_job():
     metrics_data.append(train_cm)
     metrics_data.append(test_cm)
 
-    # Save updated metrics
-    with open(output_path, "w") as f:
-        json.dump(metrics_data, f, indent=4)
+    _load_metrics()
 
     print(f"Confusion matrices saved successfully at {output_path}")
 
+def _load_metrics():
+    assert os.path.exists("files/output/metrics.json")
+    
+    with open("files/output/metrics.json", "r", encoding="utf-8") as file:
+        metrics = json.load(file)  # Load entire JSON instead of line-by-line
+    
+    return metrics
 
 
 if __name__ == "__main__":

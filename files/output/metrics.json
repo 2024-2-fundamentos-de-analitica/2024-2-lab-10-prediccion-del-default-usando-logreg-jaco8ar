@@ -12,29 +12,5 @@
         "balanced_accuracy": 0.6178952029123951,
         "recall": 0.8228087760329658,
         "f1_score": 0.7880077649140701
-    },
-    {
-        "type": "cm_matrix",
-        "dataset": "train",
-        "true_0": {
-            "predicted_0": 15784,
-            "predicted_1": 444
-        },
-        "true_1": {
-            "predicted_0": 3641,
-            "predicted_1": 1084
-        }
-    },
-    {
-        "type": "cm_matrix",
-        "dataset": "test",
-        "true_0": {
-            "predicted_0": 6889,
-            "predicted_1": 184
-        },
-        "true_1": {
-            "predicted_0": 1407,
-            "predicted_1": 499
-        }
     }
 ]
