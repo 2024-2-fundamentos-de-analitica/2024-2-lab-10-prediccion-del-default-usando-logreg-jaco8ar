@@ -96,7 +96,7 @@ def optimize_pipeline(pipeline, X_train, y_train):
 
     grid_search.fit(X_train, y_train)
 
-    return grid_search.best_estimator_, grid_search.best_params_
+    return  grid_search, grid_search.best_estimator_, grid_search.best_params_
     
 import shutil
 def create_output_directory(output_directory):
@@ -172,11 +172,11 @@ def run_job():
     pipeline = make_pipeline_logistic(categorical_features, numerical_features, k_best)
 
 
-    best_model, best_params = optimize_pipeline(pipeline, X_train, y_train)
+    grid_search, best_model, best_params = optimize_pipeline(pipeline, X_train, y_train)
 
     save_model(
         os.path.join("files/models/", "model.pkl.gz"),
-        pipeline  # Save GridSearchCV, not best_estimator_
+        grid_search
     )
 
 
