@@ -42,62 +42,35 @@ def clean_data(df):
 
     
 
-def make_pipeline_logistic(categorical_features, numerical_features, k_best_features):
-    # One-Hot Encoding for categorical variables
-    categorical_transformer = OneHotEncoder(handle_unknown="ignore")
-
-    # Min-Max Scaling for numerical variables
-    numerical_transformer = MinMaxScaler()
-
-    # Feature Preprocessing
-    transformers = []
-    if categorical_features:
-        transformers.append(("cat", categorical_transformer, categorical_features))
-    if numerical_features:
-        transformers.append(("num", numerical_transformer, numerical_features))
-
-    preprocessor = ColumnTransformer(transformers=transformers, remainder="drop")
-
-    # Ensure k_best_features does not exceed available features
-    k_best_features = min(k_best_features, len(categorical_features) + len(numerical_features))
-
-    # Create Pipeline
-    pipeline = Pipeline(
-        steps=[
-            ("preprocessor", preprocessor),  # Step 1: Preprocessing (One-Hot + Scaling)
-            ("feature_selection", SelectKBest(score_func=f_classif, k=k_best_features)),  # Step 2: Feature Selection
-            ("classifier", LogisticRegression(max_iter=500,random_state=42))  # Step 3: Logistic Regression Model
-        ]
+def make_pipeline_logistic(categorical_features):
+    transformer = ColumnTransformer([
+    ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), categorical_features)],
+    remainder='passthrough'
     )
+
+    pipeline = Pipeline([
+        ('preprocessor', transformer),
+        ('scaler', MinMaxScaler()),
+        ('feature_selection', SelectKBest(score_func=f_classif, k=10)),
+        ('classifier', LogisticRegression(max_iter=500, random_state=42))
+    ])
 
     return pipeline
 
 
 def optimize_pipeline(pipeline, X_train, y_train):
-
-    param_grid = {
-    "classifier__C": [0.01, 0.1, 1, 10, 100],  
-    "classifier__penalty": ["l1", "l2"], 
-    "classifier__solver": ["liblinear", "saga"], 
+    params = {
+        'feature_selection__k': range(1, 11),
+        'classifier__C': [0.001, 0.01, 0.1, 1, 10, 100],
+        'classifier__penalty': ['l1', 'l2'],
+        'classifier__solver': ['liblinear'],
+        "classifier__max_iter": [100, 200]
     }
-
-
-    scorer = make_scorer(balanced_accuracy_score)
-
-
-    grid_search = GridSearchCV(
-        pipeline, 
-        param_grid, 
-        scoring=scorer, 
-        cv=10, 
-        n_jobs=-1,
-        verbose=1
-    )
-
+    grid_search = GridSearchCV(pipeline, param_grid=params, cv=10, scoring='balanced_accuracy', n_jobs=-1, refit=True)
     grid_search.fit(X_train, y_train)
 
-    return  grid_search, grid_search.best_estimator_, grid_search.best_params_
-    
+    return grid_search, grid_search.best_estimator_
+        
 import shutil
 def create_output_directory(output_directory):
     if os.path.exists(output_directory):
@@ -128,7 +101,7 @@ def evaluate_model(model, X, y, dataset_name):
     }
     
     return metrics
-
+import pickle
 def compute_confusion_matrix(model, X, y, dataset_name):
     """
     Computes the confusion matrix and returns it as a dictionary.
@@ -165,19 +138,15 @@ def run_job():
     y_test = test_data_clean["default"] 
 
     categorical_features = ["SEX","EDUCATION", "MARRIAGE"]
-    numerical_features = [x for x in X_train.columns if x not in categorical_features]
 
-    k_best = 10
-
-    pipeline = make_pipeline_logistic(categorical_features, numerical_features, k_best)
+    pipeline = make_pipeline_logistic(categorical_features)
 
 
-    grid_search, best_model, best_params = optimize_pipeline(pipeline, X_train, y_train)
+    grid_search, best_model= optimize_pipeline(pipeline, X_train, y_train)
 
-    save_model(
-        os.path.join("files/models/", "model.pkl.gz"),
-        grid_search
-    )
+    os.makedirs("files/models/", exist_ok=True)
+    with gzip.open("files/models/model.pkl.gz", 'wb') as f:
+        pickle.dump(grid_search, f)
 
 
 
