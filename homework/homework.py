@@ -179,18 +179,9 @@ def run_job():
         best_model
     )
 
-    train_metrics = evaluate_model(best_model, X_train, y_train, "train")
-    test_metrics = evaluate_model(best_model, X_test, y_test, "test")
+
 
    
-
-    output_path = "files/output/metrics.json"
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    with open(output_path, "w") as f:
-        json.dump([train_metrics, test_metrics], f, indent=4)
-
-    print(f"Metrics saved successfully at {output_path}") 
 
     train_cm = compute_confusion_matrix(best_model, X_train, y_train, "train")
     test_cm = compute_confusion_matrix(best_model, X_test, y_test, "test")
@@ -199,20 +190,21 @@ def run_job():
     train_cm["type"] = "cm_matrix"
     test_cm["type"] = "cm_matrix"
 
-    # Load existing metrics from metrics.json
-    if os.path.exists(output_path):
-        with open(output_path, "r") as f:
-            metrics_data = json.load(f)
-    else:
-        metrics_data = []
+    metrics = []
 
+    train_metrics = evaluate_model(best_model, X_train, y_train, "train")
+    test_metrics = evaluate_model(best_model, X_test, y_test, "test")
+    
+    metrics.append(train_metrics)
+    metrics.append(test_metrics)
     # Append new confusion matrices
-    metrics_data.append(train_cm)
-    metrics_data.append(test_cm)
+    metrics.append(train_cm)
+    metrics.append(test_cm)
 
-    # Save updated metrics
-    with open(output_path, "w") as f:
-        json.dump(metrics_data, f, indent=4)
+    os.makedirs("files/output/", exist_ok=True)
+    with open("files/output/metrics.json", "w") as f:
+        for metric in metrics:
+            f.write(json.dumps(metric) + "\n")
 
 if __name__ == "__main__":
     run_job()
