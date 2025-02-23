@@ -79,7 +79,7 @@ def optimize_pipeline(pipeline, X_train, y_train):
     "classifier__C": [0.01, 0.1, 1, 10, 100],  
     "classifier__penalty": ["l1", "l2"], 
     "classifier__solver": ["liblinear", "saga"], 
-}
+    }
 
 
     scorer = make_scorer(balanced_accuracy_score)
@@ -176,7 +176,7 @@ def run_job():
 
     save_model(
         os.path.join("files/models/", "model.pkl.gz"),
-        best_model
+        pipeline  # Save GridSearchCV, not best_estimator_
     )
 
 
